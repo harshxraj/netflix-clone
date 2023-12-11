@@ -47,14 +47,13 @@ const Auth = () => {
 
   const register = useCallback(async () => {
     try {
-      var emailRegex = /^[A-Za-z0-9]+@[a-z]+\.[a-z]{2,3}$/;
-      if (!emailRegex.test(email)) {
-        alert("Enter valid email");
+      if (email === "" || password == "" || name == "") {
+        toast.error("Please fill all the details!");
         return;
       }
-
-      if (email === "" || password == "" || name == "") {
-        alert("Invalid");
+      var emailRegex = /^[A-Za-z0-9]+@[a-z]+\.[a-z]{2,3}$/;
+      if (!emailRegex.test(email)) {
+        toast.error("Please enter valid email");
         return;
       }
 
@@ -116,6 +115,20 @@ const Auth = () => {
             >
               {variant === "login" ? "Login" : "Sign up"}
             </button>
+            <div className="flex flex-row items-center gap-4 mt-8 justify-center">
+              <div
+                onClick={() => signIn("google", { callbackUrl: "/" })}
+                className="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition"
+              >
+                <FcGoogle size={30} />
+              </div>
+              <div
+                onClick={() => signIn("github", { callbackUrl: "/" })}
+                className="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition"
+              >
+                <FaGithub size={30} />
+              </div>
+            </div>
             <p className="text-neutral-500 mt-10">
               {variant === "login"
                 ? "First time using Netflix?"
