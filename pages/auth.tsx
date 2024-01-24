@@ -1,12 +1,29 @@
-import Input from "@/components/Input";
-import { useCallback, useState } from "react";
 import axios from "axios";
-import { signIn } from "next-auth/react";
+import { useCallback, useState } from "react";
+import { NextPageContext } from "next";
+import { getSession, signIn } from "next-auth/react";
 import { useRouter } from "next/router";
-import toast, { Toaster } from "react-hot-toast";
-
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
+
+import Input from "@/components/Input";
+
+export async function getServerSideProps(context: NextPageContext) {
+  const session = await getSession(context);
+
+  if (session) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
+}
 
 const Auth = () => {
   const router = useRouter();
@@ -14,6 +31,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+
   const [variant, setVariant] = useState("login");
 
   const toggleVariant = useCallback(() => {
@@ -24,21 +42,14 @@ const Auth = () => {
 
   const login = useCallback(async () => {
     try {
-      const result = await signIn("credentials", {
+      await signIn("credentials", {
         email,
         password,
         redirect: false,
-        // callbackUrl: "/profiles",
+        callbackUrl: "/",
       });
 
-      // Check if the authentication was successful
-      if (result?.ok) {
-        // toast.success("Logged in!");
-        router.push("/profiles");
-      } else {
-        // Handle unsuccessful authentication
-        toast.error(`${result?.error}`);
-      }
+      router.push("/profiles");
     } catch (error) {
       console.log(error);
     }
@@ -46,16 +57,6 @@ const Auth = () => {
 
   const register = useCallback(async () => {
     try {
-      if (email === "" || password == "" || name == "") {
-        toast.error("Please fill all the details!");
-        return;
-      }
-      var emailRegex = /^[A-Za-z0-9.]+@[a-z]+\.[a-z]{2,3}$/;
-      if (!emailRegex.test(email)) {
-        toast.error("Please enter valid email");
-        return;
-      }
-
       await axios.post("/api/register", {
         email,
         name,
@@ -69,48 +70,44 @@ const Auth = () => {
   }, [email, name, password, login]);
 
   return (
-    <div className="relative h-full w-full bg-[url('/images/hero.jpg')] bg-no-repeat bg-fixed bg-center bg-cover">
+    <div className="relative h-full w-full bg-[url('/images/hero.jpg')] bg-no-repeat bg-center bg-fixed bg-cover">
       <div className="bg-black w-full h-full lg:bg-opacity-50">
-        <nav className="px-12 py-12">
-          <img src="/images/logo.png" alt="logo" className="h-12" />
+        <nav className="px-12 py-5">
+          <img src="/images/logo.png" className="h-12" alt="Logo" />
         </nav>
-        {/* inputs */}
         <div className="flex justify-center">
-          <div className="bg-black bg-opacity-70 px-16 lg:py-10 md:py-4 self-center mt-2 lg:w-2/5 lg:max-w-md rounded-md w-full">
-            {/* input boxes */}
+          <div className="bg-black bg-opacity-70 px-16 py-16 self-center mt-2 lg:w-2/5 lg:max-w-md rounded-md w-full">
             <h2 className="text-white text-4xl mb-8 font-semibold">
               {variant === "login" ? "Sign in" : "Register"}
             </h2>
-
             <div className="flex flex-col gap-4">
               {variant === "register" && (
                 <Input
-                  label="Username"
-                  onChange={(e: any) => setName(e.target.value)}
                   id="name"
                   type="text"
+                  label="Username"
                   value={name}
+                  onChange={(e: any) => setName(e.target.value)}
                 />
               )}
               <Input
-                label="Email"
-                onChange={(e: any) => setEmail(e.target.value)}
                 id="email"
                 type="email"
+                label="Email address or phone number"
                 value={email}
+                onChange={(e: any) => setEmail(e.target.value)}
               />
               <Input
-                label="Password"
-                onChange={(e: any) => setPassword(e.target.value)}
-                id="password"
                 type="password"
+                id="password"
+                label="Password"
                 value={password}
+                onChange={(e: any) => setPassword(e.target.value)}
               />
             </div>
-            {/* button */}
             <button
               onClick={variant === "login" ? login : register}
-              className="bg-red-600 py-3 text-white rounded-md w-full mt-8 hover:bg-red-700 transition"
+              className="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition"
             >
               {variant === "login" ? "Login" : "Sign up"}
             </button>
@@ -119,31 +116,32 @@ const Auth = () => {
                 onClick={() => signIn("google", { callbackUrl: "/profiles" })}
                 className="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition"
               >
-                <FcGoogle size={30} />
+                <FcGoogle size={32} />
               </div>
               <div
                 onClick={() => signIn("github", { callbackUrl: "/profiles" })}
                 className="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition"
               >
-                <FaGithub size={30} />
+                <FaGithub size={32} />
               </div>
             </div>
-            <p className="text-neutral-500 mt-10">
+            <p className="text-neutral-500 mt-12">
               {variant === "login"
                 ? "First time using Netflix?"
                 : "Already have an account?"}
               <span
                 onClick={toggleVariant}
-                className="text-white ml-2 hover:underline cursor-pointer"
+                className="text-white ml-1 hover:underline cursor-pointer"
               >
                 {variant === "login" ? "Create an account" : "Login"}
               </span>
+              .
             </p>
           </div>
         </div>
       </div>
-      <Toaster />
     </div>
   );
 };
+
 export default Auth;
